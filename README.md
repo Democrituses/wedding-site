@@ -1,36 +1,41 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Wedding invitations
 
-## Getting Started
+A private invitation for each household. Full invitations include the church service, the reception, and the evening party. Party invitations include only the evening party at the Officers' Mess.
 
-First, run the development server:
+Guests open a private link, or type their name on the home page if they have lost it. Replies are saved on this machine in `data/rsvps.json`.
+
+## Run
 
 ```bash
+cp .env.example .env.local
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Set `ADMIN_PASSWORD` and `SESSION_SECRET` in `.env.local`, then open `/admin` to read replies and copy each private link. The local sample password is `wedding-admin` if you use the `.env.local` created for development.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+This app needs a long-running Node server (`npm run dev` or `npm run start`) with a writable disk. RSVPs are not kept on a static export.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Change the wording
 
-## Learn More
+Edit [`data/wedding.ts`](data/wedding.ts).
 
-To learn more about Next.js, take a look at the following resources:
+- `couple.first` and `couple.second` are the names on the invitation.
+- Leave `dateLabel`, times, addresses, dress, or travel as `""` to show “To be confirmed”.
+- `events` holds the service, reception, and party. `visibleTo` decides who can see each one. Do not add `"party"` to the service or reception.
+- `timeline` is the order of the day. A row appears only when its event is on that guest’s invitation.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Add a household
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Edit [`data/guests.ts`](data/guests.ts). Each household has:
 
-## Deploy on Vercel
+- `token`: the private link, for example `k7nq2p` becomes `/i/k7nq2p`. Use an unguessable mix of letters and numbers.
+- `invite`: `"full"` or `"party"`.
+- `people`: the names guests will type, and the names they can tick on the reply form.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+A guest can enter a full name, the names as addressed on the card (“James and Eleanor”), or a first name when only one household has it. A shared first name asks for the full name.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Sample links:
+
+- Full: `/i/k7nq2p` (James Hart and Eleanor Hart)
+- Party: `/i/m3vx8c` (Sam Cole)

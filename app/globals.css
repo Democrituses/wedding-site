@@ -1,49 +1,849 @@
+/* Miami Vice arcade cabinet: neon pink, cyan, and a sunset grid. */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --paper: #fff6ea;
+  --card: rgba(18, 0, 36, 0.82);
+  --ink: #fff6ea;
+  --sage: #ff4fd8;
+  --brass: #3dfff3;
+  --mess: #04182a;
+  --mess-ink: #d9fff8;
+  --line: rgba(61, 255, 243, 0.45);
+  --sunset: #ffb703;
+  color-scheme: dark;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
 html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+  margin: 0;
+  min-height: 100vh;
+  color: var(--ink);
+  font-family: var(--font-sans), "VT323", monospace;
+  font-size: 1.35rem;
+  line-height: 1.35;
+  background:
+    radial-gradient(ellipse at 50% -8%, rgba(255, 79, 216, 0.55), transparent 46%),
+    radial-gradient(ellipse at 100% 0%, rgba(61, 255, 243, 0.28), transparent 34%),
+    linear-gradient(180deg, #2a0845 0%, #120018 48%, #1a0530 100%);
 }
 
-* {
-  box-sizing: border-box;
-  padding: 0;
+/* Perspective floor and CRT lines sit behind the pages. */
+body::before {
+  content: "";
+  position: fixed;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  height: 46vh;
+  z-index: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(61, 255, 243, 0.45) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255, 79, 216, 0.4) 2px, transparent 2px);
+  background-size: 100% 32px, 56px 100%;
+  transform: perspective(180px) rotateX(62deg);
+  transform-origin: center bottom;
+  mask-image: linear-gradient(transparent, #000 28%);
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.18),
+    rgba(0, 0, 0, 0.18) 1px,
+    transparent 1px,
+    transparent 4px
+  );
+  opacity: 0.45;
+}
+
+body > * {
+  position: relative;
+  z-index: 1;
+}
+
+h1,
+h2,
+.couple-name,
+.addressed {
+  font-family: var(--font-display), "Monoton", cursive;
+  font-weight: 400;
+  letter-spacing: 0.04em;
+  word-spacing: 0.45em;
+}
+
+h1,
+h2,
+h3,
+p {
   margin: 0;
 }
 
 a {
-  color: inherit;
-  text-decoration: none;
+  color: var(--brass);
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--sunset);
+  outline-offset: 3px;
+}
+
+button,
+.button {
+  display: inline-block;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.62rem;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #1a0524;
+  background: var(--sage);
+  border: 3px solid var(--brass);
+  box-shadow: 4px 4px 0 var(--brass);
+  padding: 0.85rem 1rem;
+  cursor: pointer;
+}
+
+button:hover,
+.button:hover {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0 var(--brass);
+}
+
+button:disabled {
+  opacity: 0.55;
+  cursor: progress;
+  transform: none;
+}
+
+.button-quiet {
+  color: var(--brass);
+  background: transparent;
+  border-color: var(--brass);
+  box-shadow: 4px 4px 0 var(--sage);
+}
+
+.button-quiet:hover {
+  box-shadow: 2px 2px 0 var(--sage);
+}
+
+.column {
+  width: min(40rem, calc(100% - 2rem));
+  margin: 0 auto;
+  padding: 2.5rem 0 5rem;
+}
+
+.monogram {
+  margin: 0;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--sunset);
+  text-shadow: 0 0 10px var(--sunset);
+  animation: insert-coin 1.4s steps(2, end) infinite;
+}
+
+@keyframes insert-coin {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.quiet {
+  color: var(--brass);
+  font-size: 1.25rem;
+}
+
+.tbc {
+  color: var(--sunset);
+  text-shadow: 0 0 8px rgba(255, 183, 3, 0.7);
+}
+
+section[id] {
+  scroll-margin-top: 7rem;
+}
+
+/* Name gate. */
+.gate {
+  padding-top: 10vh;
+  text-align: center;
+}
+
+.gate h1 {
+  font-size: clamp(1.6rem, 6vw, 2.5rem);
+  line-height: 1.25;
+  margin: 0.6rem 0 0.8rem;
+  color: #fff;
+  text-shadow:
+    0 0 10px var(--sage),
+    3px 3px 0 var(--brass);
+}
+
+.lede {
+  margin: 0 auto 1.5rem;
+  max-width: 28rem;
+  font-size: 1.55rem;
+  color: var(--sunset);
+}
+
+.gate-form {
+  width: 100%;
+  text-align: left;
+  margin: 0 auto 1.5rem;
+}
+
+.gate .quiet {
+  margin-top: 0.5rem;
+}
+
+/* Sticky section links. Side padding keeps the links clear of the theme control. */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.75rem 4.75rem 0.7rem;
+  background: rgba(12, 0, 24, 0.88);
+  border-bottom: 3px solid var(--sage);
+  box-shadow: 0 4px 0 var(--brass);
+}
+
+.anchor-nav {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.7rem 0.9rem;
+}
+
+.anchor-nav a {
+  color: var(--brass);
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.55rem;
+  line-height: 1.6;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  text-transform: uppercase;
+  text-shadow: 0 0 8px rgba(61, 255, 243, 0.8);
+}
+
+.anchor-nav a:hover {
+  color: var(--sage);
+}
+
+/* Invitation card, drawn like a title screen. */
+.invite-card {
+  text-align: center;
+  background:
+    linear-gradient(165deg, rgba(255, 79, 216, 0.22), rgba(8, 0, 20, 0.92) 42%);
+  border: 3px solid var(--sage);
+  box-shadow:
+    7px 7px 0 var(--brass),
+    0 0 28px rgba(255, 79, 216, 0.35);
+  padding: 2.4rem 1.3rem 2.1rem;
+}
+
+.invite-card h1 {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: clamp(1.8rem, 8vw, 3.1rem);
+  line-height: 1.15;
+  color: #fff;
+  text-shadow:
+    0 0 12px var(--sage),
+    4px 4px 0 #3dfff3;
+}
+
+.ampersand {
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.42em;
+  letter-spacing: 0.14em;
+  margin: 0.35em 0;
+  color: var(--sunset);
+  text-shadow: none;
+}
+
+.request {
+  font-family: var(--font-sans), monospace;
+  font-size: clamp(1.45rem, 4vw, 1.8rem);
+  line-height: 1.25;
+  max-width: 28rem;
+  margin: 0 auto;
+  color: var(--sunset);
+}
+
+.invite-date {
+  margin-top: 1rem;
+}
+
+.addressed {
+  font-size: clamp(1.15rem, 4vw, 1.7rem);
+  line-height: 1.3;
+  color: var(--brass);
+  text-shadow: 0 0 12px rgba(61, 255, 243, 0.85);
+}
+
+.divider {
+  width: 7rem;
+  height: 3px;
+  margin: 1.2rem auto;
+  border: 0;
+  background: linear-gradient(90deg, var(--sage), var(--brass));
+}
+
+.mess-kicker,
+.reply-kicker,
+.field span,
+.choice-set legend,
+.event-details dt,
+.summary dt,
+.admin-counts dt {
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.58rem;
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  line-height: 1.6;
+  text-transform: uppercase;
+}
+
+.mess-kicker {
+  margin: 0 0 0.85rem;
+  color: var(--brass);
+}
+
+.mess-kicker.on-paper {
+  margin: 1rem 0 0;
+  color: var(--sage);
+  text-shadow: 0 0 8px var(--sage);
+}
+
+.page-section {
+  margin-top: 2.6rem;
+}
+
+.page-section > h2 {
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  line-height: 1.25;
+  margin-bottom: 1rem;
+  color: #fff;
+  text-shadow: 3px 3px 0 var(--sage);
+}
+
+/* Timeline rows, like a level select. */
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.timeline li {
+  display: grid;
+  grid-template-columns: 9rem 1fr;
+  gap: 0.75rem;
+  padding: 0.9rem 0;
+  border-top: 2px solid var(--line);
+}
+
+.timeline-time {
+  margin: 0;
+  color: var(--sunset);
+}
+
+.timeline-title {
+  margin: 0;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.68rem;
+  line-height: 1.55;
+}
+
+.timeline-detail {
+  margin: 0.35rem 0 0;
+}
+
+/* The party block is the bonus stage. */
+.mess-panel {
+  margin-top: 1.25rem;
+  padding: 1.2rem 1.1rem 0.35rem;
+  background:
+    linear-gradient(180deg, rgba(61, 255, 243, 0.12), transparent 30%),
+    var(--mess);
+  color: var(--mess-ink);
+  border: 3px solid var(--brass);
+  box-shadow: 0 0 22px rgba(61, 255, 243, 0.35);
+}
+
+.mess-panel .timeline li,
+.mess-panel .event-details dl div {
+  border-top-color: rgba(61, 255, 243, 0.35);
+}
+
+.mess-panel .tbc,
+.mess-panel h3,
+.mess-panel .timeline-title {
+  color: var(--mess-ink);
+}
+
+.event-details + .event-details {
+  margin-top: 1.5rem;
+}
+
+.event-details h3 {
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.78rem;
+  line-height: 1.6;
+  margin-bottom: 0.6rem;
+}
+
+.event-details dl {
+  margin: 0;
+}
+
+.event-details dl div {
+  display: grid;
+  grid-template-columns: 6.2rem 1fr;
+  gap: 0.75rem;
+  padding: 0.5rem 0;
+  border-top: 2px solid var(--line);
+}
+
+.event-details dd {
+  margin: 0;
+}
+
+.event-notes {
+  margin-top: 0.8rem;
+}
+
+.mess-panel .event-details {
+  padding-bottom: 1rem;
+}
+
+/* RSVP and other forms. */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+}
+
+input[type="text"],
+input[type="password"],
+textarea {
+  width: 100%;
+  font: inherit;
+  font-size: 1.35rem;
+  color: var(--ink);
+  background: #0b0014;
+  border: 3px solid var(--brass);
+  border-radius: 0;
+  padding: 0.65rem 0.75rem;
+  box-shadow: inset 0 0 12px rgba(61, 255, 243, 0.15);
+}
+
+textarea {
+  resize: vertical;
+}
+
+.choice-set {
+  border: 0;
+  margin: 0 0 1rem;
+  padding: 0;
+}
+
+.choice-set legend {
+  margin-bottom: 0.35rem;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  min-height: 2.6rem;
+  font-size: 1.35rem;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.check input {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--sage);
+}
+
+.form-note {
+  margin: 0 0 1rem;
+  color: var(--brass);
+}
+
+.form-error {
+  margin: 0 0 1rem;
+  color: #ff8fab;
+}
+
+.rsvp-form {
+  width: 100%;
+  scroll-margin-top: 7rem;
+}
+
+.rsvp-form.is-received {
+  background: var(--card);
+  border: 3px solid var(--sage);
+  box-shadow: 7px 7px 0 var(--brass);
+}
+
+.reply-received {
+  margin: 0;
+  padding: 1.15rem 1.15rem 1rem;
+  background: linear-gradient(100deg, #ff4fd8 0%, #ff8a3d 100%);
+  color: #1a0524;
+}
+
+.reply-panel {
+  padding: 1.1rem 1.15rem 1.2rem;
+}
+
+.rsvp-form:not(.is-received) .reply-panel {
+  padding: 0;
+}
+
+.reply-expand {
+  width: 100%;
+}
+
+#reply-fields {
+  margin-top: 1.15rem;
+}
+
+.reply-kicker {
+  margin: 0;
+  color: #1a0524;
+}
+
+.reply-received h3 {
+  margin: 0.2rem 0 0.35rem;
+  color: #1a0524;
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  line-height: 1.2;
+  text-shadow: none;
+}
+
+.reply-received p {
+  margin: 0.35rem 0 0;
+}
+
+.reply-summary {
+  font-family: var(--font-sans), monospace;
+  font-size: 1.45rem;
+  line-height: 1.25;
+}
+
+.reply-update {
+  margin-top: 0.85rem;
+  padding-top: 0.75rem;
+  border-top: 3px solid rgba(26, 5, 36, 0.35);
+}
+
+/* Admin scoreboard. */
+.admin {
+  width: min(46rem, calc(100% - 2rem));
+}
+
+.admin-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.admin-header h1 {
+  font-size: clamp(1.5rem, 6vw, 2.4rem);
+  line-height: 1.2;
+  text-shadow: 3px 3px 0 var(--sage);
+}
+
+.admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem 1rem;
+  margin: 0 0 2rem;
+}
+
+.summary div,
+.admin-card {
+  border-top: 3px solid var(--brass);
+  padding-top: 0.45rem;
+}
+
+.summary dt,
+.admin-counts dt {
+  color: var(--sage);
+}
+
+.summary dd {
+  margin: 0.15rem 0 0;
+  font-family: var(--font-display), cursive;
+  font-size: 1.7rem;
+  line-height: 1.2;
+  color: var(--sunset);
+  text-shadow: 0 0 10px rgba(255, 183, 3, 0.6);
+}
+
+.admin-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.admin-card {
+  padding: 1rem 0 1.2rem;
+}
+
+.admin-card h2 {
+  font-size: clamp(1.05rem, 3vw, 1.45rem);
+  line-height: 1.3;
+}
+
+.admin-names {
+  margin: 0.35rem 0;
+}
+
+.token {
+  color: var(--brass);
+}
+
+.admin-counts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin: 0.8rem 0;
+}
+
+.admin-counts dd {
+  margin: 0;
+  color: var(--sunset);
+}
+
+.admin-card p + p {
+  margin-top: 0.35rem;
+}
+
+@media (max-width: 520px) {
+  .timeline li,
+  .event-details dl div {
+    grid-template-columns: 1fr;
+    gap: 0.2rem;
+  }
+
+  .summary,
+  .admin-counts {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Full-screen cabinet boot. It covers the first paint, then removes itself. */
+.boot-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 79, 216, 0.55), transparent 48%),
+    radial-gradient(ellipse at 100% 100%, rgba(61, 255, 243, 0.22), transparent 36%),
+    #120018;
+}
+
+.boot-screen::before {
+  content: "";
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  bottom: 0;
+  height: 42vh;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(61, 255, 243, 0.45) 2px, transparent 2px),
+    linear-gradient(90deg, rgba(255, 79, 216, 0.4) 2px, transparent 2px);
+  background-size: 100% 28px, 48px 100%;
+  transform: perspective(180px) rotateX(62deg);
+  transform-origin: center bottom;
+  mask-image: linear-gradient(transparent, #000 24%);
+}
+
+.boot-screen .monogram {
+  position: absolute;
+  top: 0.7rem;
+  left: 0;
+  right: 0;
+  z-index: 2;
+  text-align: center;
+}
+
+.boot-card {
+  position: relative;
+  z-index: 1;
+  width: min(28rem, 100%);
+  text-align: center;
+}
+
+.boot-portrait {
+  display: block;
+  width: min(20rem, 82vw);
+  height: auto;
+  max-height: 46vh;
+  margin: 0.35rem auto 0;
+  object-fit: contain;
+}
+
+.boot-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 0.8rem 0 1.2rem;
+  font-family: var(--font-display), cursive;
+  font-size: clamp(1.7rem, 8vw, 2.8rem);
+  line-height: 1.15;
+  color: #fff;
+  text-shadow:
+    0 0 12px var(--sage),
+    4px 4px 0 var(--brass);
+}
+
+.boot-amp {
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.42em;
+  margin: 0.35em 0;
+  color: var(--sunset);
+  text-shadow: none;
+}
+
+.boot-line {
+  min-height: 1.4em;
+  margin: 0 0 1.35rem;
+  font-family: var(--font-pixel), monospace;
+  font-size: 0.62rem;
+  line-height: 1.6;
+  color: var(--sunset);
+}
+
+.boot-bar {
+  height: 1.15rem;
+  border: 3px solid var(--brass);
+  background: #0b0014;
+  box-shadow: 4px 4px 0 var(--sage);
+}
+
+.boot-bar span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(90deg, var(--sage), var(--sunset));
+  animation: boot-fill 2.6s linear forwards;
+}
+
+@keyframes boot-fill {
+  to {
+    width: 100%;
+  }
+}
+
+/* Theme stays after the boot screen so it can be muted. */
+.theme-audio,
+.directed-by,
+.illuminati-audio,
+.crazy-frog {
+  display: none;
+}
+
+/* Failed lookup. The mark holds for a couple of seconds, then fades. */
+.illuminati-mark {
+  position: fixed;
+  inset: 0;
+  z-index: 45;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+  background: rgba(8, 0, 16, 0.28);
+  animation: illuminati-fade 3s ease forwards;
+}
+
+.illuminati-mark svg {
+  width: min(72vmin, 30rem);
+  height: auto;
+  filter: drop-shadow(0 0 16px rgba(255, 79, 216, 0.9)) drop-shadow(0 0 10px rgba(61, 255, 243, 0.65));
+}
+
+@keyframes illuminati-fade {
+  0%,
+  66% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+.theme-toggle {
+  position: fixed;
+  top: 0.55rem;
+  right: 0.55rem;
+  z-index: 40;
+  padding: 0.45rem 0.55rem;
+  font-size: 0.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .monogram {
+    animation: none;
+  }
+
+  body::after {
+    display: none;
+  }
+
+  .boot-bar span {
+    animation: none;
+    width: 100%;
+  }
+
+  .illuminati-mark {
+    animation-duration: 0.6s;
+  }
+
+  button:hover,
+  .button:hover,
+  .button-quiet:hover {
+    transform: none;
   }
 }
