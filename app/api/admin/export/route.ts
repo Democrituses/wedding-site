@@ -13,7 +13,7 @@ export async function GET() {
     return new Response("Not available", { status: 404 });
   }
 
-  const csv = buildRsvpCsv(listHouseholds(), await listRsvps());
+  const csv = buildRsvpCsv(await listHouseholds(), await listRsvps());
   return new Response(csv, {
     headers: {
       "Content-Type": "text/csv; charset=utf-8",

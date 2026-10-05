@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Monoton, Press_Start_2P, VT323 } from "next/font/google";
 
 import { ArcadeLoader } from "@/components/ArcadeLoader";
+import { FloatingPhotos } from "@/components/FloatingPhotos";
 import "./globals.css";
 
 const display = Monoton({
@@ -43,6 +44,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body>
         <ArcadeLoader />
+        <FloatingPhotos />
         {children}
       </body>
     </html>

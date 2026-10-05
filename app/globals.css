@@ -295,6 +295,11 @@ section[id] {
 
 .invite-date {
   margin-top: 1rem;
+  font-weight: 700;
+}
+
+.invite-date strong {
+  font-weight: 700;
 }
 
 .addressed {
@@ -640,6 +645,40 @@ textarea {
   color: var(--brass);
 }
 
+.copy-link {
+  display: inline;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  box-shadow: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: 0;
+  line-height: inherit;
+  text-transform: none;
+  text-align: inherit;
+  cursor: pointer;
+  word-break: break-all;
+}
+
+.copy-link:hover,
+.copy-link:focus-visible {
+  transform: none;
+  box-shadow: none;
+  background: none;
+}
+
+.copy-link .token {
+  text-decoration: underline;
+  text-underline-offset: 0.15em;
+}
+
+.copy-confirm {
+  margin-left: 0.45rem;
+  color: var(--sunset);
+}
+
 .admin-counts {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -654,6 +693,43 @@ textarea {
 
 .admin-card p + p {
   margin-top: 0.35rem;
+}
+
+.admin-editor {
+  margin: 0 0 2rem;
+  padding-bottom: 1.4rem;
+  border-bottom: 3px solid var(--brass);
+}
+
+.admin-editor h2 {
+  margin: 0 0 0.9rem;
+  font-size: clamp(1.15rem, 4vw, 1.6rem);
+  line-height: 1.3;
+}
+
+.admin-upload {
+  margin-top: 1.8rem;
+}
+
+.admin-note {
+  margin-top: 0.85rem;
+}
+
+.admin-skips {
+  margin: 0 0 1rem;
+  padding-left: 1.2rem;
+  color: #ff8fab;
+}
+
+.admin-card form {
+  margin-top: 0.85rem;
+}
+
+input[type="file"] {
+  width: 100%;
+  font: inherit;
+  font-size: 1.15rem;
+  color: var(--ink);
 }
 
 @media (max-width: 520px) {
@@ -781,8 +857,130 @@ textarea {
 .theme-audio,
 .directed-by,
 .illuminati-audio,
-.crazy-frog {
+.crazy-frog,
+.hitmarker {
   display: none;
+}
+
+/* Stickers drift down the viewport. The layer ignores clicks except on a picture. */
+.floating-field {
+  position: fixed;
+  inset: 0;
+  z-index: 25;
+  pointer-events: none;
+}
+
+.floater {
+  position: fixed;
+  z-index: 1;
+  top: -40vh;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  line-height: 0;
+  cursor: pointer;
+  pointer-events: auto;
+  animation: float-down linear forwards;
+}
+
+.floater img {
+  width: min(12rem, 46vw);
+  height: auto;
+  display: block;
+  animation: floater-tilt 2.8s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+
+.floater:hover,
+.floater:focus-visible {
+  transform: none;
+  box-shadow: none;
+  background: transparent;
+}
+
+@keyframes float-down {
+  from {
+    top: -40vh;
+    margin-left: 0;
+  }
+
+  to {
+    top: 108vh;
+    margin-left: var(--drift);
+  }
+}
+
+@keyframes floater-tilt {
+  from {
+    transform: rotate(-7deg);
+  }
+
+  to {
+    transform: rotate(7deg);
+  }
+}
+
+.floater.is-hit {
+  animation: dissipate 0.48s ease forwards;
+  pointer-events: none;
+}
+
+.floater.is-hit img {
+  animation: none;
+}
+
+@keyframes dissipate {
+  to {
+    opacity: 0;
+    filter: blur(12px);
+    transform: scale(1.45);
+  }
+}
+
+/* Four-stroke cross at the click, gone before the sticker finishes dissolving. */
+.floater-hit {
+  position: fixed;
+  z-index: 2;
+  width: 4.5rem;
+  height: 4.5rem;
+  margin: 0;
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+  animation: hit-flash 0.42s ease-out forwards;
+  filter: drop-shadow(0 0 6px var(--sage)) drop-shadow(0 0 2px #fff);
+}
+
+.floater-hit svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.floater-hit path {
+  fill: none;
+  stroke: #fff;
+  stroke-width: 8;
+  stroke-linecap: square;
+}
+
+@keyframes hit-flash {
+  0% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(0.45);
+  }
+
+  16% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1.08);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(1.28);
+  }
 }
 
 /* Failed lookup. The mark holds for a couple of seconds, then fades. */
@@ -839,6 +1037,16 @@ textarea {
 
   .illuminati-mark {
     animation-duration: 0.6s;
+  }
+
+  .floater,
+  .floater img,
+  .floater-hit {
+    animation: none;
+  }
+
+  .floater-hit {
+    opacity: 0;
   }
 
   button:hover,

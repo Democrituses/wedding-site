@@ -1,6 +1,6 @@
 import "server-only";
 
-import { wedding } from "@/data/wedding";
+import { invitedEventIds, invitedLabel } from "@/lib/content";
 import { findHousehold } from "@/lib/guests";
 import type { EventAttendance, EventId, Household, Rsvp } from "@/lib/types";
 import { EVENT_IDS } from "@/lib/types";
@@ -26,24 +26,18 @@ function asText(value: unknown, max: number): string | null {
   return trimmed;
 }
 
-function invitedEventIds(household: Household): EventId[] {
-  return wedding.events
-    .filter((event) => event.visibleTo.includes(household.invite))
-    .map((event) => event.id);
-}
-
 /**
- * Accept a reply only for the invitation that household was sent.
- * Party guests cannot be recorded against the service or reception.
+ * Accept a reply only for the events this household was invited to.
+ * An unticked event is stored as not attending.
  */
-export function parseRsvpSubmission(body: unknown): ParseResult {
+export async function parseRsvpSubmission(body: unknown): Promise<ParseResult> {
   if (!body || typeof body !== "object") {
     return { ok: false, error: "Could not read that reply." };
   }
 
   const record = body as Record<string, unknown>;
   const token = typeof record.token === "string" ? record.token : "";
-  const household = findHousehold(token);
+  const household = await findHousehold(token);
   if (!household) {
     return { ok: false, error: "This invitation could not be found." };
   }
@@ -84,19 +78,18 @@ export function parseRsvpSubmission(body: unknown): ParseResult {
     return { ok: false, error: "Choose who is coming." };
   }
 
-  const invited = new Set(invitedEventIds(household));
+  const invited = invitedEventIds(household.events);
   const requested =
     record.events && typeof record.events === "object"
       ? (record.events as Record<string, unknown>)
       : {};
   const events = emptyEvents();
-  for (const eventId of EVENT_IDS) {
-    events[eventId] = invited.has(eventId) && requested[eventId] === true;
-  }
-  if (household.invite === "party") {
-    events.service = false;
-    events.reception = false;
-    events.party = true;
+  if (invited.length === 1) {
+    events[invited[0]] = true;
+  } else {
+    for (const eventId of invited) {
+      events[eventId] = requested[eventId] === true;
+    }
   }
   if (!EVENT_IDS.some((eventId) => events[eventId])) {
     return {
@@ -124,10 +117,7 @@ export function attendanceCount(
   rsvp: Rsvp | undefined,
   eventId: EventId,
 ): number | null {
-  const invited = wedding.events.some(
-    (event) => event.id === eventId && event.visibleTo.includes(household.invite),
-  );
-  if (!invited || !rsvp) return null;
+  if (!household.events[eventId] || !rsvp) return null;
   if (!rsvp.attending || !rsvp.events[eventId]) return 0;
   return rsvp.people.length;
 }
@@ -206,7 +196,7 @@ export function buildRsvpCsv(households: Household[], replies: Rsvp[]): string {
         : "Declined";
     const cells = [
       household.people.map((person) => person.name).join("; "),
-      household.invite === "full" ? "Full" : "Party",
+      invitedLabel(household.events, "; "),
       `/i/${household.token}`,
       replyLabel,
       ...EVENT_IDS.map((eventId) => {

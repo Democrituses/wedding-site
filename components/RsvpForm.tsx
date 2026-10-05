@@ -4,8 +4,7 @@ import { useRef, useState, type FormEvent } from "react";
 
 import { playCrazyFrog, playDirectedBy, releaseCrazyFrog } from "@/components/site-audio";
 import { formatReplyDate } from "@/lib/format";
-import type { EventAttendance, EventId, InviteType, Rsvp } from "@/lib/types";
-import { EVENT_IDS } from "@/lib/types";
+import type { EventAttendance, EventId, Rsvp } from "@/lib/types";
 
 const EVENT_LABELS: Record<EventId, string> = {
   service: "Service",
@@ -15,14 +14,27 @@ const EVENT_LABELS: Record<EventId, string> = {
 
 type Props = {
   token: string;
-  invite: InviteType;
+  invited: EventId[];
   people: string[];
   initial: Rsvp | null;
 };
 
-function startingEvents(initial: Rsvp | null): EventAttendance {
-  if (initial) return initial.events;
-  return { service: true, reception: true, party: true };
+function emptyEvents(): EventAttendance {
+  return { service: false, reception: false, party: false };
+}
+
+function startingEvents(initial: Rsvp | null, invited: EventId[]): EventAttendance {
+  const events = emptyEvents();
+  for (const eventId of invited) {
+    events[eventId] = initial ? initial.events[eventId] : true;
+  }
+  return events;
+}
+
+function replyPhrase(eventId: EventId): string {
+  if (eventId === "party") return "the evening party";
+  if (eventId === "service") return "the service";
+  return "the reception";
 }
 
 function joinList(items: string[]): string {
@@ -31,19 +43,19 @@ function joinList(items: string[]): string {
   return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
 }
 
-function partsLabel(events: EventAttendance, invite: InviteType): string {
-  if (invite === "party") return "the evening party";
-  const names = EVENT_IDS.filter((eventId) => events[eventId]).map(
-    (eventId) => EVENT_LABELS[eventId].toLowerCase(),
-  );
+function partsLabel(events: EventAttendance, invited: EventId[]): string {
+  if (invited.length === 1) return replyPhrase(invited[0]);
+  const names = invited
+    .filter((eventId) => events[eventId])
+    .map((eventId) => EVENT_LABELS[eventId].toLowerCase());
   return joinList(names);
 }
 
-export function RsvpForm({ token, invite, people, initial }: Props) {
+export function RsvpForm({ token, invited, people, initial }: Props) {
   const [attending, setAttending] = useState<boolean | null>(
     initial ? initial.attending : null,
   );
-  const [events, setEvents] = useState<EventAttendance>(startingEvents(initial));
+  const [events, setEvents] = useState<EventAttendance>(startingEvents(initial, invited));
   const [selected, setSelected] = useState<string[]>(
     initial?.attending ? initial.people : people,
   );
@@ -84,7 +96,10 @@ export function RsvpForm({ token, invite, people, initial }: Props) {
       body: JSON.stringify({
         token,
         attending,
-        events,
+        events:
+          invited.length === 1
+            ? { ...emptyEvents(), [invited[0]]: true }
+            : events,
         people: attending ? selected : [],
         dietary: attending ? dietary : "",
         message,
@@ -114,13 +129,12 @@ export function RsvpForm({ token, invite, people, initial }: Props) {
     setAttending(true);
     playCrazyFrog();
     setEvents((current) => {
-      if (EVENT_IDS.some((eventId) => current[eventId])) return current;
-      return { service: true, reception: true, party: true };
+      if (invited.some((eventId) => current[eventId])) return current;
+      return startingEvents(null, invited);
     });
     setSelected((current) => (current.length > 0 ? current : people));
   }
 
-  const invitedEvents = invite === "full" ? EVENT_IDS : (["party"] as EventId[]);
   const hasReply = recorded !== null;
 
   return (
@@ -142,7 +156,7 @@ export function RsvpForm({ token, invite, people, initial }: Props) {
           </p>
           <p className="reply-summary">
             {recorded.attending
-              ? `${joinList(recorded.people)} for ${partsLabel(recorded.events, invite)}.`
+              ? `${joinList(recorded.people)} for ${partsLabel(recorded.events, invited)}.`
               : "You have declined this invitation."}
           </p>
           <p className="reply-update">
@@ -198,10 +212,10 @@ export function RsvpForm({ token, invite, people, initial }: Props) {
 
             {attending ? (
               <>
-                {invite === "full" ? (
+                {invited.length > 1 ? (
                   <fieldset className="choice-set">
                     <legend>Parts of the day</legend>
-                    {invitedEvents.map((eventId) => (
+                    {invited.map((eventId) => (
                       <label className="check" key={eventId}>
                         <input
                           type="checkbox"
@@ -213,7 +227,9 @@ export function RsvpForm({ token, invite, people, initial }: Props) {
                     ))}
                   </fieldset>
                 ) : (
-                  <p className="form-note">You are replying for the evening party.</p>
+                  <p className="form-note">
+                    You are replying for {invited[0] ? replyPhrase(invited[0]) : "this invitation"}.
+                  </p>
                 )}
 
                 <fieldset className="choice-set">

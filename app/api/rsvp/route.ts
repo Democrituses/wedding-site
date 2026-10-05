@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const parsed = parseRsvpSubmission(body);
+  const parsed = await parseRsvpSubmission(body);
   if (!parsed.ok) {
     return Response.json({ error: parsed.error }, { status: 400 });
   }

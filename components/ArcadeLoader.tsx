@@ -1,23 +1,26 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { wedding } from "@/data/wedding";
 import { bindTheme, playTheme, pauseTheme, themeIsHeld } from "@/components/site-audio";
 
 const LINES = [
-  "WAXING THE SPEEDBOAT",
-  "TUNING THE SYNTHS",
-  "POLISHING THE NEON",
-  "DEALING THE HIGH SCORE",
+  "ARGUING OVER A NUANCE",
+  "FEEDING THE TORTOISE",
+  "ON A RUN WITH YOGI",
+  "`WORKING` FROM HOME",
 ];
 
-const BOOT_MS = 2600;
+const BOOT_MS = 3000;
 const THEME_SRC = "/crocketttheme.mp3";
 
 export function ArcadeLoader() {
+  const pathname = usePathname();
+  const skipBoot = pathname === "/admin" || pathname.startsWith("/admin/");
   const themeRef = useRef<HTMLAudioElement>(null);
-  const [visible, setVisible] = useState(true);
+  const [visible, setVisible] = useState(!skipBoot);
   const [line, setLine] = useState(0);
   const [playing, setPlaying] = useState(false);
 
@@ -75,8 +78,16 @@ export function ArcadeLoader() {
     pauseTheme();
   }
 
+  // The replies page opens straight onto the form. A later visit clears a boot that is still up.
+  useEffect(() => {
+    if (!skipBoot) return;
+    setVisible(false);
+    document.body.style.overflow = "";
+  }, [skipBoot]);
+
   // Cover the first paint, then release the page. Reduced motion skips the wait.
   useEffect(() => {
+    if (skipBoot) return;
     const reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
@@ -96,7 +107,7 @@ export function ArcadeLoader() {
       window.clearTimeout(done);
       document.body.style.overflow = previousOverflow;
     };
-  }, []);
+  }, [skipBoot]);
 
   return (
     <>

@@ -5,7 +5,13 @@ import { notFound } from "next/navigation";
 import { Fact } from "@/components/Fact";
 import { RsvpForm } from "@/components/RsvpForm";
 import { wedding, type TimelineItem, type WeddingEvent } from "@/data/wedding";
-import { visibleEvents, visibleTimeline } from "@/lib/content";
+import {
+  invitationRequest,
+  invitedEventIds,
+  isPartyOnly,
+  visibleEvents,
+  visibleTimeline,
+} from "@/lib/content";
 import { findHousehold } from "@/lib/guests";
 import { addressLine, coupleInitials } from "@/lib/names";
 import { getRsvp } from "@/lib/rsvp-store";
@@ -13,8 +19,9 @@ import { getRsvp } from "@/lib/rsvp-store";
 type InviteParams = { params: Promise<{ token: string }> };
 
 export async function generateMetadata({ params }: InviteParams): Promise<Metadata> {
+  await connection();
   const { token } = await params;
-  const household = findHousehold(token);
+  const household = await findHousehold(token);
   if (!household) return { title: "Invitation" };
   return { title: `Invitation for ${addressLine(household.people)}` };
 }
@@ -22,11 +29,11 @@ export async function generateMetadata({ params }: InviteParams): Promise<Metada
 export default async function InvitePage({ params }: InviteParams) {
   await connection();
   const { token } = await params;
-  const household = findHousehold(token);
+  const household = await findHousehold(token);
   if (!household) notFound();
 
-  const events = visibleEvents(household.invite);
-  const timeline = visibleTimeline(household.invite);
+  const events = visibleEvents(household.events);
+  const timeline = visibleTimeline(household.events);
   const reply = await getRsvp(household.token);
   const greeting = addressLine(household.people);
   const paperTimeline = timeline.filter((item) => item.eventId !== "party");
@@ -56,22 +63,15 @@ export default async function InvitePage({ params }: InviteParams) {
             <span className="couple-name">{wedding.couple.second}</span>
           </h1>
           <hr className="divider" />
-          {household.invite === "full" ? (
-            <p className="request">
-              request the pleasure of your company at their marriage, and
-              afterwards at the reception and the evening party
-            </p>
-          ) : (
-            <>
-              <p className="request">
-                request the pleasure of your company at the evening party
-              </p>
-              <p className="mess-kicker on-paper">Officers&apos; Mess</p>
-            </>
-          )}
+          <p className="request">{invitationRequest(household.events)}</p>
           <p className="invite-date">
-            <Fact value={wedding.dateLabel} />
+            <strong>
+              <Fact value={wedding.dateLabel} />
+            </strong>
           </p>
+          {isPartyOnly(household.events) ? (
+            <p className="mess-kicker on-paper">Officers&apos; Mess</p>
+          ) : null}
           <hr className="divider" />
           <p className="addressed">{greeting}</p>
         </section>
@@ -106,7 +106,7 @@ export default async function InvitePage({ params }: InviteParams) {
           <h2>Reply</h2>
           <RsvpForm
             token={household.token}
-            invite={household.invite}
+            invited={invitedEventIds(household.events)}
             people={household.people.map((person) => person.name)}
             initial={reply}
           />

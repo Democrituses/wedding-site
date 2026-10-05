@@ -1,29 +1,29 @@
 import type { Household } from "@/lib/types";
 
 /**
- * Households. The token is the private link (/i/token).
- * Names are matched on the home page, so spell them as they should be typed.
+ * Seed households, written to data/guests.json the first time the list is read.
+ * Later changes belong in that file, through the admin page.
  * James Hart and James Whitaker share a first name, so "James" asks for a full name.
  */
 export const guests: Household[] = [
   {
     token: "k7nq2p",
-    invite: "full",
+    events: { service: true, reception: true, party: true },
     people: [{ name: "James Hart" }, { name: "Eleanor Hart" }],
   },
   {
     token: "m3vx8c",
-    invite: "party",
+    events: { service: false, reception: false, party: true },
     people: [{ name: "Sam Cole" }],
   },
   {
     token: "p4lw9d",
-    invite: "full",
+    events: { service: true, reception: true, party: true },
     people: [{ name: "James Whitaker" }],
   },
   {
     token: "b8rt2e",
-    invite: "party",
+    events: { service: false, reception: false, party: true },
     people: [
       { name: "Priya Shah" },
       { name: "Omar Shah" },

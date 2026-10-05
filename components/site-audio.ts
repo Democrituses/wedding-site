@@ -152,3 +152,17 @@ export function releaseCrazyFrog() {
   stopCrazyFrog();
   if (restore) void playTheme().catch(() => {});
 }
+
+const HITMARKER_SRC = "/Hitmarker.mp3";
+
+// Mixes over whatever else is playing. It does not pause the theme or the stings.
+export function playHitmarker() {
+  const hit = new Audio(HITMARKER_SRC);
+  hit.className = "hitmarker";
+  hit.preload = "auto";
+  document.body.appendChild(hit);
+  hit.onended = () => hit.remove();
+  void hit.play().catch(() => {
+    hit.remove();
+  });
+}

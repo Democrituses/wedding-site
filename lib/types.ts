@@ -6,7 +6,7 @@ export type Person = {
 
 export type Household = {
   token: string;
-  invite: InviteType;
+  events: EventAttendance;
   people: Person[];
 };
 

@@ -1,6 +1,6 @@
 import "server-only";
 
-import { guests } from "@/data/guests";
+import { listHouseholds } from "@/lib/guests";
 import type { Household, Person } from "@/lib/types";
 
 export type LookupResult =
@@ -56,14 +56,15 @@ function householdKeys(household: Household): string[] {
  * A first name shared by more than one household asks for the full name,
  * even when that first name is also how a single guest is addressed.
  */
-export function lookupHousehold(query: string): LookupResult {
+export async function lookupHousehold(query: string): Promise<LookupResult> {
+  const households = await listHouseholds();
   const normalized = normalizeName(query);
   if (!normalized) return { status: "none" };
 
   const matched = new Set<string>();
   const singleWord = !normalized.includes(" ");
 
-  for (const household of guests) {
+  for (const household of households) {
     if (householdKeys(household).includes(normalized)) {
       matched.add(household.token);
     }

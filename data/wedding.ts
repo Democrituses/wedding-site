@@ -38,7 +38,7 @@ export const wedding: Wedding = {
     first: "Maisie",
     second: "Aidan",
   },
-  dateLabel: "",
+  dateLabel: "22nd May 2027",
 
   // Church, reception, and the evening party. Each event carries its own dress and travel notes.
   events: [
@@ -47,9 +47,10 @@ export const wedding: Wedding = {
       title: "Church service",
       visibleTo: ["full"],
       time: "",
-      venue: "",
-      address: "",
-      dress: "",
+      venue: "St Disens Church",
+      address: "6 Church Street, Bradninch, Exeter, EX5 4NS, England, UK, Earth, Solar System, Milky Way, Universe",
+      dress: "Colourful yet formal",
+      militaryDress: "test",
       travel: "",
       notes: "",
     },

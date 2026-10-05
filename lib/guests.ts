@@ -1,15 +1,15 @@
 import "server-only";
 
-import { guests } from "@/data/guests";
+import { readHouseholds, TOKEN_PATTERN } from "@/lib/guest-store";
 import type { Household } from "@/lib/types";
 
-const tokenPattern = /^[a-z0-9]{6,32}$/;
-
-export function findHousehold(token: string): Household | undefined {
-  if (!tokenPattern.test(token)) return undefined;
-  return guests.find((household) => household.token === token);
+export function findHousehold(token: string): Promise<Household | undefined> {
+  if (!TOKEN_PATTERN.test(token)) return Promise.resolve(undefined);
+  return readHouseholds().then((households) =>
+    households.find((household) => household.token === token),
+  );
 }
 
-export function listHouseholds(): Household[] {
-  return guests;
+export function listHouseholds(): Promise<Household[]> {
+  return readHouseholds();
 }

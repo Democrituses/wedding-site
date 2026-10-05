@@ -36,7 +36,7 @@ export async function POST(request: Request) {
     name = "";
   }
 
-  const result = lookupHousehold(name);
+  const result = await lookupHousehold(name);
   return Response.json(result, {
     headers: { "Cache-Control": "no-store" },
   });
