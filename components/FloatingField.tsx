@@ -2,6 +2,7 @@
 
 import { Fragment, useEffect, useRef, useState, type AnimationEvent } from "react";
 
+import { useRecordHit } from "@/components/ScoreProvider";
 import { playHitmarker } from "@/components/site-audio";
 
 const MEAN_GAP_MS = 15_000;
@@ -27,6 +28,8 @@ function nextGap() {
 export function FloatingField({ images }: { images: string[] }) {
   const [floaters, setFloaters] = useState<Floater[]>([]);
   const nextId = useRef(1);
+  const popped = useRef(new Set<number>());
+  const recordHit = useRecordHit();
 
   useEffect(() => {
     if (images.length === 0) return;
@@ -71,8 +74,12 @@ export function FloatingField({ images }: { images: string[] }) {
   }
 
   function popFloater(id: number, element: HTMLButtonElement, hitX: number, hitY: number) {
+    // One point for the first click. A second click on the fading sticker does not count.
+    if (popped.current.has(id)) return;
+    popped.current.add(id);
     const box = element.getBoundingClientRect();
     playHitmarker();
+    recordHit?.();
     setFloaters((current) =>
       current.map((floater) =>
         floater.id === id

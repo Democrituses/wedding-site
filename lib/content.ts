@@ -1,6 +1,11 @@
 import "server-only";
 
-import { wedding, type TimelineItem, type WeddingEvent } from "@/data/wedding";
+import {
+  wedding,
+  type LogisticsSection,
+  type TimelineItem,
+  type WeddingEvent,
+} from "@/data/wedding";
 import type { EventAttendance, EventId } from "@/lib/types";
 import { EVENT_IDS } from "@/lib/types";
 
@@ -17,6 +22,21 @@ export function visibleEvents(invited: EventAttendance): WeddingEvent[] {
 export function visibleTimeline(invited: EventAttendance): TimelineItem[] {
   const allowed = new Set(visibleEvents(invited).map((event) => event.id));
   return wedding.timeline.filter((item) => allowed.has(item.eventId));
+}
+
+// Directions to the church stay off invitations that do not include the service.
+// The journey home after the party is kept for every guest.
+export function visibleLogistics(invited: EventAttendance): LogisticsSection[] {
+  if (invited.service) return wedding.logistics;
+
+  return wedding.logistics.map((section) => ({
+    ...section,
+    entries: section.entries.map((entry) => {
+      if (!entry.serviceData) return entry;
+      const { serviceData: _serviceData, ...withoutService } = entry;
+      return withoutService;
+    }),
+  }));
 }
 
 export function invitedEventIds(events: EventAttendance): EventId[] {

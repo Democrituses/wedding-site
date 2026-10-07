@@ -3,6 +3,7 @@ import { Monoton, Press_Start_2P, VT323 } from "next/font/google";
 
 import { ArcadeLoader } from "@/components/ArcadeLoader";
 import { FloatingPhotos } from "@/components/FloatingPhotos";
+import { ScoreProvider } from "@/components/ScoreProvider";
 import "./globals.css";
 
 const display = Monoton({
@@ -43,9 +44,11 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       className={`${display.variable} ${pixel.variable} ${sans.variable}`}
     >
       <body>
-        <ArcadeLoader />
-        <FloatingPhotos />
-        {children}
+        <ScoreProvider>
+          <ArcadeLoader />
+          <FloatingPhotos />
+          {children}
+        </ScoreProvider>
       </body>
     </html>
   );

@@ -34,9 +34,10 @@ yarn-error.log*
 .env*
 !.env.example
 
-# Guest list and RSVPs are written while the server is running
+# Guest list, RSVPs, and picture scores are written while the server is running
 /data/guests.json
 /data/rsvps.json
+/data/scores.json
 
 # vercel
 .vercel
