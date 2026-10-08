@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { connection } from "next/server";
 import { notFound } from "next/navigation";
 
@@ -60,6 +61,7 @@ export default async function InvitePage({ params }: InviteParams) {
           <a href="#details">Details</a>
           <a href="#travel">Travel</a>
           <a href="#reply">Reply</a>
+          <Link href={`/i/${household.token}/scores`}>Scores</Link>
         </nav>
       </header>
 

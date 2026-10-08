@@ -14,21 +14,26 @@ type ScoreBoard = {
   top: ScorePlace[];
 };
 
-const ScoreContext = createContext<(() => void) | null>(null);
+const ScoreContext = createContext<{
+  recordHit: (() => void) | null;
+  board: ScoreBoard | null;
+}>({ recordHit: null, board: null });
 
-const INVITE_PATH = /^\/i\/([a-z0-9]{6,32})$/;
+const INVITE_PATH = /^\/i\/([a-z0-9]{6,32})(?:\/scores)?$/;
 const REFRESH_MS = 30_000;
 
 export function useRecordHit(): (() => void) | null {
-  return useContext(ScoreContext);
+  return useContext(ScoreContext).recordHit;
 }
 
-function Scoreboard({ board }: { board: ScoreBoard }) {
+export function ScoreboardPanel() {
+  const { board } = useContext(ScoreContext);
+  if (!board) return <p className="quiet">Loading scores</p>;
+
   const onBoard = board.top.some((place) => place.yours);
 
   return (
-    <aside className="scoreboard" aria-label="High scores">
-      <p className="scoreboard-title">High scores</p>
+    <div className="scoreboard" aria-label="High scores">
       {board.top.length === 0 ? (
         <p className="scoreboard-empty">Pop a picture</p>
       ) : (
@@ -43,7 +48,7 @@ function Scoreboard({ board }: { board: ScoreBoard }) {
         </ol>
       )}
       {!onBoard && board.you > 0 ? <p className="scoreboard-you">You {board.you}</p> : null}
-    </aside>
+    </div>
   );
 }
 
@@ -99,9 +104,8 @@ export function ScoreProvider({ children }: { children: React.ReactNode }) {
   }, [token, applyBoard]);
 
   return (
-    <ScoreContext.Provider value={token ? recordHit : null}>
+    <ScoreContext.Provider value={{ recordHit: token ? recordHit : null, board: token ? board : null }}>
       {children}
-      {token && board ? <Scoreboard board={board} /> : null}
     </ScoreContext.Provider>
   );
 }
