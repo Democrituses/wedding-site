@@ -20,7 +20,7 @@ export function CopyInviteLink({ token }: { token: string }) {
   const [origin, setOrigin] = useState("");
   const [copied, setCopied] = useState(false);
 
-  // The address bar origin is localhost here and the public domain once the site is online.
+  // Use the domain in the address bar, so a copied link matches the site that served this page.
   useEffect(() => {
     setOrigin(window.location.origin);
   }, []);

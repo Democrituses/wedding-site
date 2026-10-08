@@ -4,6 +4,7 @@ import { NextResponse } from "next/server";
 import { ADMIN_COOKIE, adminEnabled, isValidSession } from "@/lib/auth";
 import { removeHousehold } from "@/lib/guest-edit";
 import { TOKEN_PATTERN } from "@/lib/guest-store";
+import { publicUrl } from "@/lib/public-url";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
 
   const form = await request.formData();
   const token = String(form.get("token") ?? "");
-  const adminUrl = new URL("/admin", request.url);
+  const adminUrl = publicUrl(request, "/admin");
   if (!TOKEN_PATTERN.test(token) || !(await removeHousehold(token))) {
     adminUrl.searchParams.set("guestError", "That household could not be found.");
     return NextResponse.redirect(adminUrl, 303);

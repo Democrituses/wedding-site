@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { ADMIN_COOKIE, adminEnabled, isValidSession } from "@/lib/auth";
 import { addHousehold } from "@/lib/guest-edit";
+import { publicUrl } from "@/lib/public-url";
 import type { EventAttendance } from "@/lib/types";
 
 export const runtime = "nodejs";
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
   };
   const result = await addHousehold(names, events);
 
-  const adminUrl = new URL("/admin", request.url);
+  const adminUrl = publicUrl(request, "/admin");
   if (!result.ok) adminUrl.searchParams.set("guestError", result.error);
   else adminUrl.searchParams.set("added", result.household.token);
   return NextResponse.redirect(adminUrl, 303);

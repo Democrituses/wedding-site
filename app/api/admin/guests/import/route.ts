@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 
 import { ADMIN_COOKIE, adminEnabled, isValidSession } from "@/lib/auth";
 import { importGuestCsv } from "@/lib/guest-edit";
+import { publicUrl } from "@/lib/public-url";
 
 export const runtime = "nodejs";
 
@@ -18,7 +19,7 @@ export async function POST(request: Request) {
   const cookieStore = await cookies();
   if (!isValidSession(cookieStore.get(ADMIN_COOKIE)?.value)) return unavailable();
 
-  const adminUrl = new URL("/admin", request.url);
+  const adminUrl = publicUrl(request, "/admin");
   const form = await request.formData();
   const file = form.get("file");
   if (!(file instanceof File) || file.size === 0) {
