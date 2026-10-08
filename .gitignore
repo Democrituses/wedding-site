@@ -34,7 +34,7 @@ yarn-error.log*
 .env*
 !.env.example
 
-# Guest list, RSVPs, and picture scores are written while the server is running
+# Local JSON copies. The site reads guests, replies, and scores from Postgres.
 /data/guests.json
 /data/rsvps.json
 /data/scores.json

@@ -1,89 +1,92 @@
 import "server-only";
 
-import { readFile, rename, writeFile } from "fs/promises";
-import path from "path";
+import type postgres from "postgres";
 
-import { guests as seedGuests } from "@/data/guests";
-import type { EventAttendance, Household } from "@/lib/types";
-import { EVENT_IDS } from "@/lib/types";
-
-type Store = {
-  households: Household[];
-};
-
-const filePath = path.join(process.cwd(), "data", "guests.json");
+import { withDb } from "@/lib/db";
+import type { Household } from "@/lib/types";
 
 export const TOKEN_PATTERN = /^[a-z0-9]{6,32}$/;
 
-// Writes are queued so two admin saves cannot overwrite each other.
-let chain: Promise<void> = Promise.resolve();
+// One lock for the whole guest list, so two admin saves cannot interleave.
+const HOUSEHOLD_LOCK_A = 481516;
+const HOUSEHOLD_LOCK_B = 2342;
 
-function enqueue<T>(task: () => Promise<T>): Promise<T> {
-  const run = chain.then(task, task);
-  chain = run.then(
-    () => undefined,
-    () => undefined,
-  );
-  return run;
-}
+type Query = postgres.TransactionSql;
 
-function copyHouseholds(households: Household[]): Household[] {
+type HouseholdRow = {
+  token: string;
+  service: boolean;
+  reception: boolean;
+  party: boolean;
+};
+
+type PersonRow = {
+  token: string;
+  position: number;
+  name: string;
+};
+
+async function loadHouseholds(tx: Query): Promise<Household[]> {
+  const households = await tx<HouseholdRow[]>`
+    SELECT token, service, reception, party
+    FROM households
+    ORDER BY token
+  `;
+  const people = await tx<PersonRow[]>`
+    SELECT token, position, name
+    FROM household_people
+    ORDER BY token, position
+  `;
+
+  const byToken = new Map<string, { name: string }[]>();
+  for (const person of people) {
+    const list = byToken.get(person.token);
+    const entry = { name: person.name };
+    if (list) list.push(entry);
+    else byToken.set(person.token, [entry]);
+  }
+
   return households.map((household) => ({
     token: household.token,
-    events: { ...household.events },
-    people: household.people.map((person) => ({ name: person.name })),
+    events: {
+      service: household.service,
+      reception: household.reception,
+      party: household.party,
+    },
+    people: byToken.get(household.token) ?? [],
   }));
 }
 
-function isEvents(value: unknown): value is EventAttendance {
-  if (!value || typeof value !== "object") return false;
-  const record = value as Record<string, unknown>;
-  return EVENT_IDS.every((eventId) => typeof record[eventId] === "boolean");
-}
-
-function isHousehold(value: unknown): value is Household {
-  if (!value || typeof value !== "object") return false;
-  const record = value as Record<string, unknown>;
-  if (typeof record.token !== "string" || !TOKEN_PATTERN.test(record.token)) return false;
-  if (!isEvents(record.events)) return false;
-  if (!Array.isArray(record.people) || record.people.length === 0) return false;
-  return record.people.every((person) => {
-    if (!person || typeof person !== "object") return false;
-    const name = (person as { name?: unknown }).name;
-    return typeof name === "string" && name.trim().length > 0;
-  });
-}
-
-async function writeStore(store: Store): Promise<void> {
-  const temporary = `${filePath}.${process.pid}.tmp`;
-  await writeFile(temporary, `${JSON.stringify(store, null, 2)}\n`, "utf8");
-  await rename(temporary, filePath);
-}
-
-// A missing file is filled from the seed. An existing file is never replaced by it.
-async function readStore(): Promise<Store> {
-  try {
-    const raw = await readFile(filePath, "utf8");
-    const parsed = JSON.parse(raw) as Store;
-    if (!parsed || !Array.isArray(parsed.households)) {
-      throw new Error("Guest list is unreadable.");
-    }
-    if (!parsed.households.every(isHousehold)) {
-      throw new Error("Guest list is unreadable.");
-    }
-    return parsed;
-  } catch (error) {
-    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      const seeded = { households: copyHouseholds(seedGuests) };
-      await writeStore(seeded);
-      return seeded;
-    }
-    throw error;
+async function saveHouseholds(tx: Query, households: Household[]): Promise<void> {
+  // Replies and scores are separate tables, so replacing the guest list leaves them in place.
+  await tx`DELETE FROM households`;
+  for (const household of households) {
+    await tx`
+      INSERT INTO households (token, service, reception, party)
+      VALUES (
+        ${household.token},
+        ${household.events.service},
+        ${household.events.reception},
+        ${household.events.party}
+      )
+    `;
   }
+
+  const people = households.flatMap((household) =>
+    household.people.map((person, position) => ({
+      token: household.token,
+      position,
+      name: person.name,
+    })),
+  );
+  if (people.length === 0) return;
+  await tx`
+    INSERT INTO household_people ${tx(people, "token", "position", "name")}
+  `;
 }
 
 export function readHouseholds(): Promise<Household[]> {
-  return enqueue(async () => (await readStore()).households);
+  return withDb((tx) => loadHouseholds(tx));
 }
 
 export function withHouseholds<T>(
@@ -93,12 +96,11 @@ export function withHouseholds<T>(
     | { households: Household[]; result: T }
     | Promise<{ households: Household[]; result: T }>,
 ): Promise<T> {
-  return enqueue(async () => {
-    const store = await readStore();
-    const next = await change(store.households);
-    if (next.households !== store.households) {
-      await writeStore({ households: next.households });
-    }
+  return withDb(async (tx) => {
+    await tx`SELECT pg_advisory_xact_lock(${HOUSEHOLD_LOCK_A}, ${HOUSEHOLD_LOCK_B})`;
+    const households = await loadHouseholds(tx);
+    const next = await change(households);
+    if (next.households !== households) await saveHouseholds(tx, next.households);
     return next.result;
   });
 }

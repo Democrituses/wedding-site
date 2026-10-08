@@ -1,8 +1,7 @@
 import type { Household } from "@/lib/types";
 
 /**
- * Seed households, written to data/guests.json the first time the list is read.
- * Later changes belong in that file, through the admin page.
+ * Sample households kept for reference. The site reads the guest list from Postgres.
  * James Hart and James Whitaker share a first name, so "James" asks for a full name.
  */
 export const guests: Household[] = [
