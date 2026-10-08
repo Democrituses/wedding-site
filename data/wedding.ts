@@ -177,7 +177,7 @@ export const wedding: Wedding = {
         },
         {
           name: "Exmouth",
-          text: "Exmouth is another good option, though expect slightly longer travel times to Bradninch if you are attending the service..",
+          text: "Exmouth is another good option, though expect slightly longer travel times to Bradninch if you are attending the service...",
           links: [
             { label: "More places in Exmouth", href: "https://www.visitexmouth.co.uk/stay" },
           ],
